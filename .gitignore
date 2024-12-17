@@ -1,0 +1,70 @@
+# Unity Generated Folders and Files
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+
+# Visual Studio / MonoDevelop Generated Files
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# Unity Auto-generated Files
+*.pidb.meta
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# Crash Reports
+sysinfo.txt
+
+# Build Folders
+Build/
+Builds/
+
+# Packed Unity Packages
+*.unitypackage
+
+# Generated Lightmap Data
+Lightmap-*/ 
+
+# Cache Folders
+[Cc]ache/
+[Cc]rash[ ]Reports/
+[Pp]layer[ ]Logs/
+
+# ScriptableObjects and Localization files (optional, can be regenerated)
+*.asset.meta
+
+# Mac System Files
+.DS_Store
+
+# Windows System Files
+Thumbs.db
+Desktop.ini
+
+# Ignore JetBrains Rider IDE files
+.idea/
+*.sln.docstates
+
+# Logs
+*.log
+*.log.*
+
+# Auto-generated files
+*.bak
+*.swp
+*.tmp
+
