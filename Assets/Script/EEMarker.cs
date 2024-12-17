@@ -17,13 +17,14 @@ public class EEMarker : MonoBehaviour
     private ROSConnection ros;
     private const string topicName = "joint_control";
     private Joint_listMsg savedJointMsg;
+    private MeshMapCollisionDetector[] meshCollisionDetectors;
     // Start is called before the first frame update
     void Start()
     {
         // Collision Material 로드
         collisionMarkerMaterial = Resources.Load<Material>("Material/EE_Collision_T");
         // collisionMarkerMaterial.mainTextureScale = new Vector2(0.1f, 0.1f); // Material 크기 조절
-        // 일반 상태 Material 로드 (초록색 등 다른 색상)
+        // 일반 상태 Material 로드 (�����록색 등 다른 색상)
         normalMarkerMaterial = Resources.Load<Material>("Material/EE_Normal_T");
         // normalMarkerMaterial.mainTextureScale = new Vector2(0.1f, 0.1f); // Material 크기 조절
 
@@ -41,6 +42,9 @@ public class EEMarker : MonoBehaviour
 
         // 모든 JointControl이 초기화될 때까지 기다림
         StartCoroutine(WaitForJointControlsInitialization());
+
+        // 씬의 모든 MeshMapCollisionDetector 찾기
+        meshCollisionDetectors = FindObjectsOfType<MeshMapCollisionDetector>();
     }
 
     private IEnumerator WaitForJointControlsInitialization()
@@ -69,8 +73,8 @@ public class EEMarker : MonoBehaviour
         if (isOperating || isTrajectoryControlScene || isJointControlScene || JointDataManager.IsJointMessageSaved())
         {
             currentMatrix = CalculateWorldMatrix();
-        Vector3 position = currentMatrix.GetColumn(3);
-        CreateCollisionMarker(position, MeshMapCollisionDetector.isCollision);
+            Vector3 position = currentMatrix.GetColumn(3);
+            CreateCollisionMarker(position, MeshMapCollisionDetector.isCollision);
         }
     }
 
@@ -128,5 +132,20 @@ public class EEMarker : MonoBehaviour
             }
         }
         collisionMarkers.Clear();
+    }
+
+    // 현재 활성화된 충돌 상태 확인
+    private bool CheckCurrentCollision()
+    {
+        if (meshCollisionDetectors == null) return false;
+
+        foreach (var detector in meshCollisionDetectors)
+        {
+            if (detector != null)  // detector 자체가 null이 아닌지만 확인
+            {
+                return MeshMapCollisionDetector.isCollision;  // static 프로퍼티로 접근
+            }
+        }
+        return false;
     }
 }

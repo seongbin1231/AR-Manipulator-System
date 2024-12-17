@@ -2691,12 +2691,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86b456713bd4d4c31b3cb04c67d82381, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _targetFrameRate: 10
+  _targetFrameRate: 5
   _fuseKeyframesOnly: 0
   _maximumIntegrationDistance: 10
-  _voxelSize: 0.025
+  _voxelSize: 0.03
   _enableDistanceBasedVolumetricCleanup: 1
-  _meshBlockSize: 2
+  _meshBlockSize: 21
   _meshCullingDistance: 0
   _enableMeshDecimation: 1
   _isMeshFilteringEnabled: 0

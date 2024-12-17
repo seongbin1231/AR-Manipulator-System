@@ -358,10 +358,24 @@ public class MeshMapCollisionDetector : MonoBehaviour
     private List<GameObject> collisionMarkers = new List<GameObject>();
     private Material collisionMarkerMaterial;
     private MeshCollider meshCollider;
-    public static bool isCollision = false;
+    private Dictionary<string, bool> linkCollisionStates = new Dictionary<string, bool>();
 
-    // 각 링크별 충돌 상태를 추적하기 위한 Dictionary 추가
-    private static Dictionary<string, bool> linkCollisionStates = new Dictionary<string, bool>();
+    // static 백킹 필드로 변경
+    private static bool _isCollision = false;
+
+    // static 프로퍼티로 변경
+    public static bool isCollision
+    {
+        get { return _isCollision; }
+        private set { _isCollision = value; }
+    }
+
+    private void UpdateCollisionState()
+    {
+        // 모든 MeshMapCollisionDetector의 충돌 상태를 확인
+        bool anyCollision = linkCollisionStates.Values.Any(state => state);
+        isCollision = anyCollision;  // static 프로퍼티 업데이트
+    }
 
     public void Initialize()
     {
@@ -379,15 +393,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
         // 초기화 시 충돌 상태 초기화
         linkCollisionStates.Clear();
-        isCollision = false;
-    }
-
-    // 전체 충돌 상태 업데이트
-    private void UpdateCollisionState()
-    {
-        // 하나라도 true가 있으면 전체 isCollision을 true로 설정
-        isCollision = linkCollisionStates.Values.Any(state => state);
-        Debug.Log($"충돌 상태 업데이트: {string.Join(", ", linkCollisionStates.Select(kvp => $"{kvp.Key}={kvp.Value}"))} => 전체 상태: {isCollision}");
+        isCollision = false;  // static 프로퍼티 초기화
     }
 
     private void CreateCollisionMarker(Vector3 position)
@@ -415,13 +421,11 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("RobotLink") ||
-            other.gameObject.tag.Contains("sgr532"))
+        if (other.gameObject.tag.Contains("sgr532") && !other.gameObject.tag.Contains("base") && other.gameObject.tag != "sgr532/link1" && other.gameObject.tag != "sgr532/link2" && other.gameObject.tag != "sgr532/link3")
         {
             string linkName = GetLinkName(other.gameObject);
             if (!string.IsNullOrEmpty(linkName))
             {
-                // 해당 링크의 충돌 상태를 true로 설정
                 linkCollisionStates[linkName] = true;
                 UpdateCollisionState();
 
@@ -436,8 +440,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.layer == LayerMask.NameToLayer("RobotLink") ||
-            other.gameObject.tag.Contains("sgr532"))
+        if (other.gameObject.tag.Contains("sgr532") && !other.gameObject.tag.Contains("base") && other.gameObject.tag != "sgr532/link1" && other.gameObject.tag != "sgr532/link2" && other.gameObject.tag != "sgr532/link3")
         {
             string linkName = GetLinkName(other.gameObject);
             if (!string.IsNullOrEmpty(linkName))
@@ -459,7 +462,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
         while (current != null)
         {
             // base_link 특수 처리
-            if (current.name == "sagittarius_base_link")
+            if (current.name == "sagittarius_base_link" || current.name == "base_link" || current.name == "link1" || current.name == "link2" || current.name == "link3")
             {
                 // return "base_link";
                 return string.Empty;
@@ -488,7 +491,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
         // 해당 객체가 파괴될 때 충돌 상태도 초기화
         linkCollisionStates.Clear();
-        isCollision = false;
+        isCollision = false;  // static 프로퍼티 초기화
     }
 
     private void VisualUpdate(Collider collider, string materialPath)
@@ -518,7 +521,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
                 if (unnamedTransform != null && unnamedTransform.childCount > 0)
                 {
                     string linkName = unnamedTransform.GetChild(0).name;
-                    if (linkName == "sagittarius_base_link") {
+                    if (linkName == "sagittarius_base_link" || linkName == "link1" || linkName == "link2" || linkName == "link3") {
                         // Visuals/unnamed/{link_name}/{link_name}_0 경로의 MeshRenderer 찾기
                         Transform linkVisual = visualsTransform
                             .Find("unnamed")
