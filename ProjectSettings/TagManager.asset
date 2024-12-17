@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - OptionScene
+  - robot
+  - MainScene
+  - RenderingScene
+  - ControlTag
+  - SingleView
+  - MeshTrans
+  - K1Collider
+  - sgr532/base_link
+  - sgr532/link1
+  - sgr532/link2
+  - sgr532/link3
+  - sgr532/link4
+  - sgr532/link5
+  - sgr532/link6
+  - sgr532/link_gripper_left
+  - sgr532/link_gripper_right
+  - RenderedMesh
+  - MeshOnOff
+  - PlayForward
+  - PlayBackward
+  - Publish
+  - Trajectory
+  - MotionView
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - RobotLink
+  - MeshLayer
+  - Robot
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
