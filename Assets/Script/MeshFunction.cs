@@ -2,7 +2,11 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using System.Collections.Generic;
 
-// Mesh와 Collider 정보를 함께 저장하기 위한 구조체
+/// <summary>
+///     This script track image and set robot
+///     pose updating step. If it can track image,
+///     image returns position and orientation
+/// </summary>
 public struct MeshData
 {
     public Mesh mesh;

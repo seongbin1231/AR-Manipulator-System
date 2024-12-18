@@ -1,66 +1,72 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+///     This script changes view mode between
+///     single view and 3D view.
+/// </summary>
 public class CardboardRenderer : MonoBehaviour
 {
-    public RawImage rawImageLeft;
-    public RawImage rawImageRight;
+    // Render image
+    public RawImage rawImageLeft;       // Image for 3D view , left half
+    public RawImage rawImageRight;      // Image for 3D view , right half
     public RawImage rawImageFull;
+
+    // Should be controlled canvas
     public Canvas buttonCanvas;
     public Canvas cubeCanvas;
     public Canvas gazeCanvas;
     public Canvas playCanvas;
-    private RenderTexture renderTexture;
-    // private bool isInitialized = false;
-    private bool isSplitView = false;
-    private Camera mainCamera;
     private Canvas parentCanvas;
+
+    // Set view texture
+    private RenderTexture renderTexture;
+    private Camera mainCamera;
+
+    // 3D view flag
+    private bool isSplitView = false;
     private static bool tag_3d_view = false;
 
 
     void Start()
     {
-        Debug.Log("CardboardRenderer 시작...");
 
         parentCanvas = GetComponentInParent<Canvas>();
         if (parentCanvas == null)
         {
-            Debug.LogError("부모 Canvas를 찾을 수 없습니다!");
             return;
         }
 
         renderTexture = new RenderTexture(1440, 3200, 24);
         Camera.main.targetTexture = renderTexture;
-        Debug.Log("RenderTexture 설정 완료");
 
+        // set view texture
         rawImageLeft.texture = renderTexture;
         rawImageRight.texture = renderTexture;
         rawImageFull.texture = renderTexture;
-        Debug.Log("RawImage 설정 완료");
 
+        // set viewing angle
         float width = 0.8f;
         rawImageLeft.uvRect = new Rect(0, 0, width, 1);
         rawImageRight.uvRect = new Rect(1-width, 0, width, 1);
         rawImageFull.uvRect = new Rect(0, 0, 1, 1);
-        Debug.Log("UVRect 설정 완료");
 
         SetupRectTransforms();
-        // SetSplitView();
 
+        // Set slitview by checking 3D view flag
         if(tag_3d_view)
         {
-            Debug.Log("3D view mode enabled");
             isSplitView = true;
-            SetSplitView(); // 즉시 split view 적용
+            SetSplitView();
         }
         else
         {
-            Debug.Log("3D view mode disabled");
             isSplitView = false;
-            SetSplitView(); // 즉시 split view 적용
+            SetSplitView();
         }
     }
 
+    // Setting image rect
     private void SetupRectTransforms()
     {
         RectTransform leftRect = rawImageLeft.rectTransform;
@@ -86,18 +92,20 @@ public class CardboardRenderer : MonoBehaviour
         fullRect.anchoredPosition = Vector2.zero;
         fullRect.sizeDelta = Vector2.zero;
         fullRect.localScale = Vector3.one;
-
-        Debug.Log("RectTransform 설정 완료");
     }
 
+    // Split view toggle (Single View <--> 3D View)
     public void SetSplitView()
     {
+        // 3D View
         if (isSplitView)
         {
+            // Left, right image activate
             rawImageLeft.gameObject.SetActive(true);
             rawImageRight.gameObject.SetActive(true);
             rawImageFull.gameObject.SetActive(false);
 
+            // Canvas controll
             if (cubeCanvas != null)
             {
                 cubeCanvas.gameObject.SetActive(true);
@@ -122,15 +130,19 @@ public class CardboardRenderer : MonoBehaviour
                 parentCanvas.sortingOrder = 0;
             }
 
+            // recover last setting
             rawImageLeft.transform.SetAsLastSibling();
             rawImageRight.transform.SetAsLastSibling();
         }
+        // Single View
         else
         {
+            // Full image activate
             rawImageLeft.gameObject.SetActive(false);
             rawImageRight.gameObject.SetActive(false);
             rawImageFull.gameObject.SetActive(true);
 
+            // Canvas controll
             if (cubeCanvas != null)
             {
                 cubeCanvas.gameObject.SetActive(false);
@@ -156,10 +168,12 @@ public class CardboardRenderer : MonoBehaviour
                 buttonCanvas.transform.SetAsLastSibling();
             }
 
+            // recover last setting
             rawImageFull.transform.SetAsLastSibling();
         }
 
         Debug.Log($"View mode changed to: {(isSplitView ? "Split" : "Full")}, Parent Canvas mode: {parentCanvas?.renderMode}");
+        // flag change
         isSplitView = !isSplitView;
     }
 

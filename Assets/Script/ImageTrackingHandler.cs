@@ -4,39 +4,49 @@ using UnityEngine.XR.ARSubsystems;
 using UnityEngine.UI;
 using System;
 
+/// <summary>
+///     This script track image and set robot
+///     pose updating step. If it can track image,
+///     image returns position and orientation
+/// </summary>
 public class ImageTrackingHandler : MonoBehaviour
 {
+    // Set image used for tracking
     [SerializeField]
     private ARTrackedImageManager trackedImageManager;
 
-    // 위치와 회전을 전달하는 이벤트
+    // Event provide image position and orientation
     public event Action<Vector3, Quaternion> OnPoseUpdated;
 
     [SerializeField]
-    private Button toggleButton; // 버튼 참조
+    private Button toggleButton; // Reference button (robot pose updating step)
     [SerializeField]
-    private Color greenColor = Color.green; // 초록색
+    private Color greenColor = Color.green; // Set green color
     [SerializeField]
-    private Color redColor = Color.red; // 빨간색
+    private Color redColor = Color.red; // Set red color
 
-    private bool isButtonPressed = false; // 버튼 상태
+    private bool isButtonPressed = false; // Button status
 
+    // Execute when image tracked
     void OnEnable()
     {
         trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
     }
 
+    // Execute when image cannot be tracked
     void OnDisable()
     {
         trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
     }
 
+    // Execute when button down
     public void OnButtonDown()
     {
         isButtonPressed = !isButtonPressed;
-        UpdateButtonColor(); // 버튼 색상 업데이트
+        UpdateButtonColor();
     }
 
+    // For each trackedImage, update pose
     private void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs eventArgs)
     {
         foreach (var trackedImage in eventArgs.added)
@@ -56,22 +66,22 @@ public class ImageTrackingHandler : MonoBehaviour
         }
     }
 
+    // Update position and orientation set by trackedImage
     private void UpdatePose(ARTrackedImage trackedImage)
     {
-        if (!isButtonPressed) return; // 버튼이 눌리지 않으면 리턴
+        if (!isButtonPressed) return;
 
         Vector3 position = trackedImage.transform.position;
         Quaternion rotation = trackedImage.transform.rotation;
 
-        // 이벤트 호출
         OnPoseUpdated?.Invoke(position, rotation);
 
         Debug.Log($"이미지 위치: {position}, 이미지 회전: {rotation}");
     }
 
+    // Update button color when button input occurs
     private void UpdateButtonColor()
     {
-        // 버튼의 Image 컴포넌트 색상 변경
         Image buttonImage = toggleButton.GetComponent<Image>();
         if (buttonImage != null)
         {

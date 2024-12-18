@@ -11,10 +11,12 @@ public class ArticulationCollisionDetection : MonoBehaviour
 {
     // Robot
     private GameObject parent;
+
     // For reading collision names
     private CollisionReader collisionReader;
     private string selfName;
     private string otherName;
+    
     // For checking object in touch with the collider
     public GameObject CollidingObject { get; private set; }
     

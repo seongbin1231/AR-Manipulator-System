@@ -1,6 +1,11 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+///     This script detects Mesh collision bounds
+///     for checking position of mesh map and robot
+///     collisions.
+/// </summary>
 public class BoundsVisualizer : MonoBehaviour
 {
     public Color meshColliderBoundsColor = new Color(1, 0, 0, 0.5f);
@@ -29,7 +34,7 @@ public class BoundsVisualizer : MonoBehaviour
 
     void CreateBoundingBoxes()
     {
-        // 기존 라인 제거
+        // Eleminate original bounds line
         if (boundingBoxLines != null)
         {
             foreach (var line in boundingBoxLines)
@@ -51,23 +56,24 @@ public class BoundsVisualizer : MonoBehaviour
                 LineRenderer line = lineObj.AddComponent<LineRenderer>();
                 boundingBoxLines[i] = line;
 
-                // 라인 렌더러 설정
+                // line renderer setting
                 line.material = new Material(Shader.Find("Sprites/Default"));
                 line.startColor = line.endColor = meshColliderBoundsColor;
                 line.startWidth = line.endWidth = 0.02f;
-                line.positionCount = 24; // 박스를 그리기 위한 점 개수
+                line.positionCount = 24;
 
                 DrawBoundingBox(line, colliders[i].bounds);
             }
         }
     }
 
+    // Draw bounds with created bounding boxes
     void DrawBoundingBox(LineRenderer line, Bounds bounds)
     {
         Vector3 min = bounds.min;
         Vector3 max = bounds.max;
 
-        // 박스의 모서리 점들
+        // edge of box
         Vector3[] corners = new Vector3[8];
         corners[0] = new Vector3(min.x, min.y, min.z);
         corners[1] = new Vector3(max.x, min.y, min.z);
@@ -78,21 +84,21 @@ public class BoundsVisualizer : MonoBehaviour
         corners[6] = new Vector3(max.x, max.y, max.z);
         corners[7] = new Vector3(min.x, max.y, max.z);
 
-        // 라인 그리기
+        // draw line
         int index = 0;
-        // 아래 사각형
+        // under square
         line.SetPosition(index++, corners[0]); line.SetPosition(index++, corners[1]);
         line.SetPosition(index++, corners[1]); line.SetPosition(index++, corners[2]);
         line.SetPosition(index++, corners[2]); line.SetPosition(index++, corners[3]);
         line.SetPosition(index++, corners[3]); line.SetPosition(index++, corners[0]);
 
-        // 위 사각형
+        // upper square
         line.SetPosition(index++, corners[4]); line.SetPosition(index++, corners[5]);
         line.SetPosition(index++, corners[5]); line.SetPosition(index++, corners[6]);
         line.SetPosition(index++, corners[6]); line.SetPosition(index++, corners[7]);
         line.SetPosition(index++, corners[7]); line.SetPosition(index++, corners[4]);
 
-        // 수직선
+        // vertical line
         line.SetPosition(index++, corners[0]); line.SetPosition(index++, corners[4]);
         line.SetPosition(index++, corners[1]); line.SetPosition(index++, corners[5]);
         line.SetPosition(index++, corners[2]); line.SetPosition(index++, corners[6]);

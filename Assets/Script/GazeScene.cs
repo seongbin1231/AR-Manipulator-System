@@ -6,69 +6,74 @@ using UnityEngine.XR.ARFoundation;
 using RosMessageTypes.JointControl;
 using Unity.Robotics.UrdfImporter.Control;
 
+/// <summary>
+///     This script provide 3D View interaction
+///     by gazing the boxes. Boxed are classified
+///     with name of Tag.
+/// </summary>
 public class GazeScene : MonoBehaviour
 {
+    // Reference scripts
     private SceneController sceneController;
     private MeshFunction meshManager;
-    Transform cameraTransform;
-
-    public Image imageGaze;     // ī�޶� ������ ǥ���� �̹���
-    public Image imageTime;     // �浹 �� ���� �� ������ �� �̹���
-    private float collisionDuration = 0.0f;
-    private float requiredDuration = 1.0f;  // 3�� ���� �浹 ���� �ʿ�
-    private bool isColliding = false;
-
     private ARMeshManager arMeshManager;
     private MeshMapRenderer meshmaprenderer;
     private CtrlFlagPublisher ctrlflagpublisher;
-    // private CardboardController cardboardController;
-    private int meshLayer;  // 클래스 상단에 변수 선언 추가
-
     [SerializeField]
     private CardboardRenderer cardboardRenderer;
 
+    // Reference objects
+    Transform cameraTransform;
+    public Image imageGaze;
+    public Image imageTime;
+
+    // For gaze interaction steps
+    private float collisionDuration = 0.0f;
+    private float requiredDuration = 1.0f;
+    private bool isColliding = false;
+
+    // Mesh layer number as avoid hit gaze with mesh map
+    private int meshLayer;
+
+    // 3D View trajectory control slider
     [SerializeField]
     private Slider slider;
-    public GameObject sgr532;
 
-    private Joint_listMsg currentMessage; // 현재 실행 중인 메시지
+    //3D View trajectory control slider controller
+    private Joint_listMsg currentMessage;
     private float play_value = 0f;
     private float play_velocity = 0.005f;
 
+    // Get current view mode
     public static bool tag_3d = false;
 
     void Start()
     {
-        cameraTransform = Camera.main.transform;  // Camera.main Ȯ
+        // Get main camera transform
+        cameraTransform = Camera.main.transform;
 
-        // Hierarchy SceneController Ʈ ã SceneController ũƮ   ϴ.
+        // Find SceneController
         GameObject sceneControllerObject = GameObject.Find("SceneController");
         if (sceneControllerObject != null)
         {
             sceneController = sceneControllerObject.GetComponent<SceneController>();
-            if (sceneController == null)
-            {
-                Debug.LogError("SceneController script is not attached to SceneController GameObject.");
-            }
-        }
-        else
-        {
-            Debug.LogError("SceneController GameObject not found in the scene.");
         }
 
-        // MeshMapRenderer 찾기
+        // Find MeshMapRenderer
         meshmaprenderer = FindObjectOfType<MeshMapRenderer>();
         if (meshmaprenderer == null)
         {
             Debug.LogWarning("MeshMapRenderer를 찾을 수 없습니다.");
         }
 
+        // Find MeshFunction
         meshManager = FindObjectOfType<MeshFunction>();
             if (meshManager == null)
         {
             Debug.LogWarning("MeshManager를 찾을 수 없습니다.");
         }
 
+        // Find CardboardRenderer
         if (cardboardRenderer == null)
         {
             cardboardRenderer = FindObjectOfType<CardboardRenderer>();
@@ -78,41 +83,42 @@ public class GazeScene : MonoBehaviour
             }
         }
 
+        // Find CtrlFlagPublisher
         ctrlflagpublisher = FindObjectOfType<CtrlFlagPublisher>();
         if (ctrlflagpublisher == null)
         {
             ctrlflagpublisher = FindObjectOfType<CtrlFlagPublisher>();
-            if (ctrlflagpublisher == null)
-            {
-                Debug.LogWarning("CardboardRenderer 찾을 수 없습니다.");
-            }
         }
 
-        ResetProgress();  // Fill Amount 0 ʱȭ
+        // Initialize gaze interaction
+        ResetProgress();
         imageGaze.gameObject.SetActive(true);
 
-        // Mesh를 위한 레이어 설정
+        // Mesh map layer
         meshLayer = LayerMask.NameToLayer("MeshLayer");
         if (meshLayer == -1)
         {
-            meshLayer = 8;  // 사용하지 않는 레이어 번호 사용
+            // Number of MeshLayer
+            // It can be set at editor
+            meshLayer = 8;  
         }
-
-        // // 씬 시작 시 tag_3d 초기화
-        // tag_3d = false;
-        // CardboardRenderer.Set3dTag(tag_3d);
     }
 
     void Update()
     {
-        // MeshLayer를 제외한 모든 레이어와 충돌 검사
+        // Ignore hitting with MeshLayer
         int layerMask = ~(1 << meshLayer);
 
-        // ī�޶�  ī޶ ٶ󺸴  Raycast
+        // Check Raycast with user gazing (cameraTransform - position / forward)
         if (Physics.Raycast(cameraTransform.position, cameraTransform.forward, out RaycastHit hit, Mathf.Infinity, layerMask))
         {
+            // Interactino with hit.collider
             GameObject go = hit.collider.gameObject;
-            if (go.CompareTag("MeshOnOff"))  // Box collider
+
+            // If hitting event occur, function execute by comparing with tag name
+
+            // Mesh Map On / Off
+            if (go.CompareTag("MeshOnOff"))     // if tag of box is "MeshOnOff"
             {
                 if (!isColliding)
                 {
@@ -126,6 +132,7 @@ public class GazeScene : MonoBehaviour
                 {
                     if (meshmaprenderer != null)
                     {
+                        // Mesh Map On / Off
                         meshmaprenderer.RenderMeshOnOff();
                     }
                     ResetProgress();
@@ -135,7 +142,8 @@ public class GazeScene : MonoBehaviour
                     imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("MeshTrans"))  // Box collider
+            // Mesh Map Transparent or Not
+            else if (go.CompareTag("MeshTrans"))        // if tag of box is "MeshTrans"
             {
                 if (!isColliding)
                 {
@@ -149,6 +157,7 @@ public class GazeScene : MonoBehaviour
                 {
                     if (meshmaprenderer != null)
                     {
+                        // Mesh Map Transparent or Not
                         meshmaprenderer.RenderMeshTransparent();
                     }
                     ResetProgress();
@@ -158,7 +167,8 @@ public class GazeScene : MonoBehaviour
                     imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("Publish"))  // Box collider
+            // Mesh Map Transparent or Not
+            else if (go.CompareTag("Publish"))      // if tag of box is "Publish"
             {
                 if (!isColliding)
                 {
@@ -181,17 +191,17 @@ public class GazeScene : MonoBehaviour
                     imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("RenderingScene"))  // Box collider
+            // SceneChange to Rendering
+            else if (go.CompareTag("RenderingScene"))       // if tag of box is "RenderingScene"
             {
                 if (!isColliding)
                 {
                     isColliding = true;
-                    imageTime.gameObject.SetActive(true);  // 浹  Progress Bar Ȱȭ
+                    imageTime.gameObject.SetActive(true);
                 }
 
                 collisionDuration += Time.deltaTime;
 
-                // 浹 Ǹ Info
                 if (collisionDuration >= requiredDuration)
                 {
                     TriggerSceneChange("Rendering");
@@ -202,17 +212,17 @@ public class GazeScene : MonoBehaviour
                     imageTime.fillAmount = collisionDuration / requiredDuration;  // Ʈ
                 }
             }
-            else if (go.CompareTag("Trajectory"))  // Box collider
+            // SceneChange to Trajectory
+            else if (go.CompareTag("Trajectory"))       // if tag of box is "Trajectory"
             {
                 if (!isColliding)
                 {
                     isColliding = true;
-                    imageTime.gameObject.SetActive(true);  // 浹  Progress Bar Ȱȭ
+                    imageTime.gameObject.SetActive(true);
                 }
 
                 collisionDuration += Time.deltaTime;
 
-                // 浹 Ǹ Info
                 if (collisionDuration >= requiredDuration)
                 {
                     CardboardRenderer.Set3dTag(true);
@@ -221,15 +231,16 @@ public class GazeScene : MonoBehaviour
                 }
                 else
                 {
-                    imageTime.fillAmount = collisionDuration / requiredDuration;  // Ʈ
+                    imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("MotionView"))  // Box collider
+            // SceneChange to MotionView
+            else if (go.CompareTag("MotionView"))       // if tag of box is "MotionView"
             {
                 if (!isColliding)
                 {
                     isColliding = true;
-                    imageTime.gameObject.SetActive(true);  // 浹  Progress Bar Ȱȭ
+                    imageTime.gameObject.SetActive(true);
                 }
 
                 collisionDuration += Time.deltaTime;
@@ -243,10 +254,11 @@ public class GazeScene : MonoBehaviour
                 }
                 else
                 {
-                    imageTime.fillAmount = collisionDuration / requiredDuration;  // Ʈ
+                    imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("SingleView"))  // Box collider
+            // View mode change from 3D View to Single View
+            else if (go.CompareTag("SingleView"))       // if tag of box is "SingleView"
             {
                 if (!isColliding)
                 {
@@ -270,7 +282,8 @@ public class GazeScene : MonoBehaviour
                     imageTime.fillAmount = collisionDuration / requiredDuration;
                 }
             }
-            else if (go.CompareTag("PlayForward"))  // Box collider
+            // In 3D View Trajectory Control, slide up is executed by PlayForward
+            else if (go.CompareTag("PlayForward"))      // if tag of box is "PlayForward"
             {
                 Debug.Log($"PlayForward");
                 isColliding = true;
@@ -286,7 +299,8 @@ public class GazeScene : MonoBehaviour
                 slider.value = play_value;
 
             }
-            else if (go.CompareTag("PlayBackward"))  // Box collider
+            // In 3D View Trajectory Control, slide down is executed by PlayBackward
+            else if (go.CompareTag("PlayBackward"))     // if tag of box is "PlayBackward"
             {
                 Debug.Log($"PlayBackward");
                 isColliding = true;
@@ -316,30 +330,27 @@ public class GazeScene : MonoBehaviour
         }
     }
 
+    // Execute to chnage scene
     public void TriggerSceneChange(string sceneName)
     {
-        // SceneController GotoScene Լ ȣϿ մϴ.
         if (sceneController != null)
         {
             sceneController.GotoScene(sceneName);
         }
     }
 
+    // Reset Gaze interaction
     void ResetProgress()
     {
+        // Set gazing time 0s
         collisionDuration = 0.0f;
-        // imageTime.fillAmount = 0.0f;  // Fill Amount 0 ʱȭ
-        // imageTime.gameObject.SetActive(false);  // Progress Bar
         if (imageTime != null)
         {
-            imageTime.fillAmount = 0.0f;  // Fill Amount를 0으로 초기화
-            imageTime.gameObject.SetActive(false);  // Progress Bar 비활성화
+            // Set fill amout 0
+            imageTime.fillAmount = 0.0f;
+            // deactivate imageTime
+            imageTime.gameObject.SetActive(false);
         }
         isColliding = false;
-
-        // CardboardRenderer.Set3dTag(false);
-
-        // tag_3d = false;
-        // CardboardRenderer.Set3dTag(tag_3d);
     }
 }
