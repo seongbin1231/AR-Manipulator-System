@@ -3,27 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+/// <summary>
+///     This class renders saved mesh data and
+///     handles all of rendered mesh data
+/// </summary>
 public class MeshMapRenderer : MonoBehaviour
 {
+    // Handle saved Data
     private static List<MeshData> savedMeshDataList;
+
+    // Handle rendered Data
     private List<GameObject> renderedMeshObjects = new List<GameObject>();
 
-    // 추가된 변수들
+    // Mesh visualize variables
     private GameObject meshPrefabT;
     private GameObject meshPrefabW;
-    private bool isFirstPrefab = true;
+    private bool isTransparentPrefab = true;
     private bool isMeshVisible = true;
 
-    // Gizmos 색상 설정을 위한 변수 추가
-    public Color boundsColor = new Color(0, 1, 0, 0.5f); // 반투명 녹색
-    private static bool showColliderBounds = false;  // 시각화 켜기/끄기
-    public Color visualColliderColor = new Color(0, 1, 0, 0.5f);  // 반투명 녹색
-    public Color originColliderColor = new Color(1, 0, 0, 0.5f);  // 반투명 빨간색
-    // public bool showColliderWireframe = true;
-    public float centerSphereRadius = 0.02f;
-    private static Color meshColliderColor = new Color(0, 1, 0, 0.5f);  // 반투명 녹색
+    // Gizmos for visualization of collision bounds
+    private static bool showColliderBounds = false;  // visualization flag
+    private static Color GizmosColliderColor = new Color(0, 1, 0, 0.5f);
 
-    // 시각화 제어를 위한 public 메서드
+    // Set visualzation flag
     public static void SetVisualization(bool enable)
     {
         showColliderBounds = enable;
@@ -31,14 +33,9 @@ public class MeshMapRenderer : MonoBehaviour
 
     void Start()
     {
-        // 프팹 로드 추가
+        // Load Prefab
         meshPrefabT = Resources.Load<GameObject>("Prefab/MeshPrefab_T");
         meshPrefabW = Resources.Load<GameObject>("Prefab/MeshPrefab_W");
-
-        if (meshPrefabT == null || meshPrefabW == null)
-        {
-            Debug.LogError("Prefab을 찾을 수 없습니다. 경로를 확인해주세요.");
-        }
 
         var arMeshManager = FindObjectOfType<UnityEngine.XR.ARFoundation.ARMeshManager>();
         if (arMeshManager != null)
@@ -50,13 +47,9 @@ public class MeshMapRenderer : MonoBehaviour
         {
             RenderSavedMeshData();
         }
-        else
-        {
-            Debug.LogWarning("저장된 Mesh 데이터가 없습니다.");
-        }
-        CheckCollisionSettings();
+        // CheckCollisionSettings();
 
-        // MeshMapCollisionDetector 컴포넌트 추가 확인
+        // Add MeshMapCollisionDetector to all of the rendered mesh objects
         foreach (var obj in renderedMeshObjects)
         {
             if (obj.GetComponent<MeshMapCollisionDetector>() == null)
@@ -64,7 +57,7 @@ public class MeshMapRenderer : MonoBehaviour
                 obj.AddComponent<MeshMapCollisionDetector>();
             }
 
-            // CollisionDetection 모드 통일
+            // Set collisionDetection mode
             ArticulationBody artBody = obj.GetComponent<ArticulationBody>();
             if (artBody != null)
             {
@@ -73,95 +66,88 @@ public class MeshMapRenderer : MonoBehaviour
         }
     }
 
+    // Public function that called in MeshFunction script, SaveMesh function
     public static void SetMeshData(List<MeshData> meshDataList)
     {
         savedMeshDataList = meshDataList;
     }
 
+    // Render saved mesh data in savedMeshDataList
     public void RenderSavedMeshData()
     {
         if (savedMeshDataList == null || savedMeshDataList.Count == 0)
         {
-            Debug.LogWarning("저장된 Mesh 데이터가 없습니다.");
             return;
         }
 
+        // For all saved mesh data
         for (int i = 0; i < savedMeshDataList.Count; i++)
         {
-            GameObject prefabToUse = isFirstPrefab ? meshPrefabT : meshPrefabW;
+            // Select Prefab to use
+            GameObject prefabToUse = isTransparentPrefab ? meshPrefabT : meshPrefabW;
             if (prefabToUse == null)
             {
-                Debug.LogError("Mesh Prefab이 없습니다.");
                 return;
             }
 
+            // Set mesh name, mesh filter, mesh collider for each mesh data
             GameObject meshObject = Instantiate(prefabToUse, Vector3.zero, Quaternion.identity);
             meshObject.name = $"Rendered_Mesh_{i}";
 
             var meshData = savedMeshDataList[i];
 
-            // MeshFilter에 메시 할당
+            // MeshFilter
             MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
             if (meshFilter != null)
             {
                 meshFilter.sharedMesh = meshData.mesh;
             }
 
-            // MeshCollider 설정
+            // MeshCollider
             var meshCollider = meshObject.GetComponent<MeshCollider>();
             if (meshCollider != null)
             {
                 meshCollider.sharedMesh = meshData.mesh;
                 meshCollider.convex = meshData.colliderData.isConvex;
-                // meshCollider.isTrigger = meshData.colliderData.isTrigger;
                 meshCollider.isTrigger =true;
                 meshCollider.enabled = true;
             }
-            else
-            {
-                Debug.LogError("MeshCollider 컴포넌트가 없습니다.");
-            }
 
-            // CollisionDetector 추가 및 초기화
+            // Add and initialize CollisionDetector
             var collisionDetector = meshObject.AddComponent<MeshMapCollisionDetector>();
             collisionDetector.Initialize();
 
-            // 디버그를 위한 로그 추가
-            // Debug.Log($"Mesh {i} 충돌 감지기 설정 완료: {meshObject.name}");
-
             renderedMeshObjects.Add(meshObject);
-            // Debug.Log($"Mesh {i} 렌더링 완료: vertices({meshData.vertices.Length}), triangles({meshData.triangles.Length/3})");
-
         }
-
-        // Debug.Log($"메시 렌더링 완료: {renderedMeshObjects.Count}개의 메시 생성됨");
     }
 
-    // 프리팹만 전환하는 함수로 수정
+    // Change Mesh Prefab (Transparent or Not)
     public void RenderMeshTransparent()
     {
-        // 프리팹 전환
-        isFirstPrefab = !isFirstPrefab;
-        GameObject selectedPrefab = isFirstPrefab ? meshPrefabT : meshPrefabW;
+        // Transparent state toggle
+        isTransparentPrefab = !isTransparentPrefab;
+        // Set Prefab and Mesh Material as status of isTransparentPrefab
+        GameObject selectedPrefab = isTransparentPrefab ? meshPrefabT : meshPrefabW;
         Material newMaterial = selectedPrefab.GetComponent<MeshRenderer>().sharedMaterial;
 
+        // Change MeshRenderer of rendered mesh map
         foreach (var obj in renderedMeshObjects)
         {
             MeshRenderer meshRenderer = obj.GetComponent<MeshRenderer>();
             if (meshRenderer != null)
             {
-                // 새로운 머티리얼 적용
                 meshRenderer.material = new Material(newMaterial);
             }
         }
-
-        Debug.Log($"메시 프리팹이 {(isFirstPrefab ? "MeshPrefab_T" : "MeshPrefab_W")}로 변경되었습니다.");
     }
 
+    // Change mesh visibility
     public void RenderMeshOnOff()
     {
+        // visible state toggle
         isMeshVisible = !isMeshVisible;
 
+        // visible state change for all rendered mesh object
         foreach (var obj in renderedMeshObjects)
         {
             MeshRenderer meshRenderer = obj.GetComponent<MeshRenderer>();
@@ -170,13 +156,11 @@ public class MeshMapRenderer : MonoBehaviour
                 meshRenderer.enabled = isMeshVisible;
             }
         }
-
-        Debug.Log($"메시 가시성이 {(isMeshVisible ? "켜짐" : "꺼짐")}으로 변경되었습니다.");
     }
 
+    // Set destroyed mesh
     private void OnDestroy()
     {
-        // 생성된 모든 메시 오브젝트 정리
         foreach (var obj in renderedMeshObjects)
         {
             if (obj != null)
@@ -186,35 +170,12 @@ public class MeshMapRenderer : MonoBehaviour
         }
     }
 
-    // MeshCollider 상태를 확인하는 새로운 메서드
-    private void CheckAllMeshColliders()
-    {
-        foreach (var obj in renderedMeshObjects)
-        {
-            MeshCollider collider = obj.GetComponent<MeshCollider>();
-            if (collider != null)
-            {
-                if (collider.sharedMesh != null)
-                {
-                    Debug.Log($"{obj.name}: MeshCollider 정상 (Convex: {collider.convex})");
-                }
-                else
-                {
-                    Debug.LogWarning($"{obj.name}: MeshCollider에 mesh가 없습니다.");
-                }
-            }
-            else
-            {
-                Debug.LogError($"{obj.name}: MeshCollider 컴포넌트가 없습니다.");
-            }
-        }
-    }
-
+    // Draw mesh collider bounds and frames for debugging
     private void OnDrawGizmos()
     {
         if (!showColliderBounds || renderedMeshObjects == null) return;
 
-        Gizmos.color = meshColliderColor;
+        Gizmos.color = GizmosColliderColor;
 
         foreach (var meshObject in renderedMeshObjects)
         {
@@ -223,13 +184,13 @@ public class MeshMapRenderer : MonoBehaviour
                 MeshCollider collider = meshObject.GetComponent<MeshCollider>();
                 if (collider != null)
                 {
-                    // 바운딩 박스 그리기
+                    // Draw bounding boxes
                     Gizmos.DrawWireCube(collider.bounds.center, collider.bounds.size);
 
-                    // 중심점 표시
+                    // Draw center of bounding boxes
                     Gizmos.DrawSphere(collider.bounds.center, 0.02f);
 
-                    // 메시 와이어프레임 그리기
+                    // Draw lines on the frames
                     if (collider.sharedMesh != null)
                     {
                         Vector3[] vertices = collider.sharedMesh.vertices;
@@ -254,21 +215,10 @@ public class MeshMapRenderer : MonoBehaviour
     // CheckCollisionSettings 메서드를 호출하여 확인
     public void CheckCollisionSettings()
     {
-        // // Physics 설정 확인
-        // Debug.Log($"\n=== Physics Settings ===");
-        // Debug.Log($"Auto Simulation: {Physics.autoSimulation}");
-        // Debug.Log($"Bounce Threshold: {Physics.bounceThreshold}");
-        // Debug.Log($"Default Contact Offset: {Physics.defaultContactOffset}");
-        // Debug.Log($"Default Solver Iterations: {Physics.defaultSolverIterations}");
-
         // Layer Collision Matrix 확인
         int meshMapLayer = LayerMask.NameToLayer("MeshLayer");
         int robotLayer = LayerMask.NameToLayer("RobotLink");
         bool canCollide = !Physics.GetIgnoreLayerCollision(meshMapLayer, robotLayer);
-        // Debug.Log($"\n=== Layer Collision ===");
-        // Debug.Log($"MeshMap Layer: {meshMapLayer}");
-        // Debug.Log($"RobotLink Layer: {robotLayer}");
-        // Debug.Log($"Can Collide: {canCollide}");
 
         // Collider 타입 및 설정 확인
         Debug.Log($"\n=== Collider Settings ===");
@@ -352,27 +302,36 @@ public class MeshMapRenderer : MonoBehaviour
 
 
 
-// CollisionDetector 클래스를 MeshMap 내부에 추가
+/// <summary>
+///     This class is component of RenderedMeshObject.
+///     This class detect collision between mesh map
+///     and manipulator while visual updating
+/// </summary>
 public class MeshMapCollisionDetector : MonoBehaviour
 {
-    private List<GameObject> collisionMarkers = new List<GameObject>();
-    private Material collisionMarkerMaterial;
+    // Set Mesh Collider
     private MeshCollider meshCollider;
+
+    // Check all of link collision state
     private Dictionary<string, bool> linkCollisionStates = new Dictionary<string, bool>();
 
-    // static 백킹 필드로 변경
+    // Handle collision Marker
+    private List<GameObject> collisionMarkers = new List<GameObject>();
+    private Material collisionMarkerMaterial;
+
+    // Set private static variable
     private static bool _isCollision = false;
 
-    // static 프로퍼티로 변경
+    // Set public static variable for allowing access of EEMarker
     public static bool isCollision
     {
         get { return _isCollision; }
         private set { _isCollision = value; }
     }
 
+    // Check collision for each robot link
     private void UpdateCollisionState()
     {
-        // 모든 MeshMapCollisionDetector의 충돌 상태를 확인
         bool anyCollision = linkCollisionStates.Values.Any(state => state);
         isCollision = anyCollision;  // static 프로퍼티 업데이트
     }
@@ -380,45 +339,30 @@ public class MeshMapCollisionDetector : MonoBehaviour
     public void Initialize()
     {
         meshCollider = GetComponent<MeshCollider>();
-        if (meshCollider == null)
-        {
-            Debug.LogWarning($"[{gameObject.name}] MeshCollider를 찾을 수 없습니다.");
-        }
-
         collisionMarkerMaterial = Resources.Load<Material>("Material/CollisionMarker");
-        if (collisionMarkerMaterial == null)
-        {
-            Debug.LogError("CollisionMarker Material을 찾을 수 없습니다.");
-        }
 
-        // 초기화 시 충돌 상태 초기화
         linkCollisionStates.Clear();
-        isCollision = false;  // static 프로퍼티 초기화
+        isCollision = false;
     }
 
     private void CreateCollisionMarker(Vector3 position)
     {
         if (collisionMarkerMaterial == null) return;
 
-        // 구체 프리미티브 생성
         GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         marker.transform.position = position;
-        marker.transform.localScale = Vector3.one * 0.05f; // 5cm 크기
+        marker.transform.localScale = Vector3.one * 0.05f; // Set sphere size
 
-        // 머티리얼 적용
         MeshRenderer renderer = marker.GetComponent<MeshRenderer>();
         renderer.material = collisionMarkerMaterial;
 
-        // 콜라이더 제거 (시각적 표시만 필요)
-        Destroy(marker.GetComponent<Collider>());
-
-        // 1초 후 마커 제거
+        Destroy(marker.GetComponent<Collider>()); // To use only visual
         Destroy(marker, 1f);
 
-        // 리스트에 추가
         collisionMarkers.Add(marker);
     }
 
+    // Mesh collision occurs
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag.Contains("sgr532") && !other.gameObject.tag.Contains("base") && other.gameObject.tag != "sgr532/link1" && other.gameObject.tag != "sgr532/link2" && other.gameObject.tag != "sgr532/link3")
@@ -431,13 +375,12 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
                 Vector3 collisionPoint = other.bounds.center;
                 CreateCollisionMarker(collisionPoint);
-
-                // 충돌한 Collider에 대해 빨간색 Material로 Visual 업데이트
-                VisualUpdate(other, "K1/Materials/rgba-1-0-0-1");
+                VisualUpdate(other, "K1/Materials/rgba-1-0-0-1");   // red robot link
             }
         }
     }
 
+    // Mesh collision exit
     private void OnTriggerExit(Collider other)
     {
         if (other.gameObject.tag.Contains("sgr532") && !other.gameObject.tag.Contains("base") && other.gameObject.tag != "sgr532/link1" && other.gameObject.tag != "sgr532/link2" && other.gameObject.tag != "sgr532/link3")
@@ -445,29 +388,24 @@ public class MeshMapCollisionDetector : MonoBehaviour
             string linkName = GetLinkName(other.gameObject);
             if (!string.IsNullOrEmpty(linkName))
             {
-                // 해당 링크의 충돌 상태를 false로 설정
                 linkCollisionStates[linkName] = false;
                 UpdateCollisionState();
-
-                // 충돌이 해제된 Collider에 대해 흰색 Material로 Visual 업데이트
-                VisualUpdate(other, "K1/Materials/rgba-1-1-1-1");
+                VisualUpdate(other, "K1/Materials/rgba-1-1-1-1");   // normal robot link
             }
         }
     }
 
-    // 링크 이름 추출 헬퍼 메서드
+    // Extract link name
     private string GetLinkName(GameObject obj)
     {
         Transform current = obj.transform;
         while (current != null)
         {
-            // base_link 특수 처리
             if (current.name == "sagittarius_base_link" || current.name == "base_link" || current.name == "link1" || current.name == "link2" || current.name == "link3")
             {
-                // return "base_link";
                 return string.Empty;
             }
-            // 일반적인 링크 이름 처리
+
             if (current.name.EndsWith("_0"))
             {
                 return current.parent.name;
@@ -479,7 +417,6 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
     private void OnDestroy()
     {
-        // 생성된 모든 마커 정리
         foreach (var marker in collisionMarkers)
         {
             if (marker != null)
@@ -487,16 +424,16 @@ public class MeshMapCollisionDetector : MonoBehaviour
                 Destroy(marker);
             }
         }
-        collisionMarkers.Clear();
 
-        // 해당 객체가 파괴될 때 충돌 상태도 초기화
+        // Clear all markers and init collision state
+        collisionMarkers.Clear();
         linkCollisionStates.Clear();
-        isCollision = false;  // static 프로퍼티 초기화
+        isCollision = false;
     }
 
+    // Visual update as collision state
     private void VisualUpdate(Collider collider, string materialPath)
     {
-        // Collisions 부모 객체 찾기
         Transform current = collider.transform;
         Transform collisionsParent = null;
 
@@ -512,17 +449,16 @@ public class MeshMapCollisionDetector : MonoBehaviour
 
         if (collisionsParent != null)
         {
-            // Collisions와 같은 계층의 Visuals 찾기
+            // Find visual object following hierarchy
             Transform visualsTransform = collisionsParent.parent.Find("Visuals");
             if (visualsTransform != null)
             {
-                // link_name 찾기 (Collisions/unnamed/{link_name} 구조에서)
                 Transform unnamedTransform = collisionsParent.Find("unnamed");
                 if (unnamedTransform != null && unnamedTransform.childCount > 0)
                 {
                     string linkName = unnamedTransform.GetChild(0).name;
                     if (linkName == "sagittarius_base_link" || linkName == "link1" || linkName == "link2" || linkName == "link3") {
-                        // Visuals/unnamed/{link_name}/{link_name}_0 경로의 MeshRenderer 찾기
+                        // Find MeshRenderer at Visuals/unnamed/{link_name}/{link_name}_0
                         Transform linkVisual = visualsTransform
                             .Find("unnamed")
                             ?.Find(linkName)
@@ -533,7 +469,6 @@ public class MeshMapCollisionDetector : MonoBehaviour
                             MeshRenderer meshRenderer = linkVisual.GetComponent<MeshRenderer>();
                             if (meshRenderer != null)
                             {
-                                // Material 로드 및 적용
                                 Material material = Resources.Load<Material>("K1/Materials/rgba-1-1-1-1");
                                 if (material != null)
                                 {
@@ -543,8 +478,7 @@ public class MeshMapCollisionDetector : MonoBehaviour
                         }
                     }
                     else{
-
-                        // Visuals/unnamed/{link_name}/{link_name}_0 경로의 MeshRenderer 찾기
+                        // Find MeshRenderer at Visuals/unnamed/{link_name}/{link_name}_0
                         Transform linkVisual = visualsTransform
                             .Find("unnamed")
                             ?.Find(linkName)

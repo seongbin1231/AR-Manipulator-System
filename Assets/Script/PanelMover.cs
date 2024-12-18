@@ -1,20 +1,25 @@
 using UnityEngine;
 
+/// <summary>
+///     This class move panel in 3D View
+/// </summary>
 public class PanelMover : MonoBehaviour
 {
     public GameObject canvas;
     private float nodThreshold = 60.0f;
     private bool isIncreasing = false;
     private float previousPitch;
-    private float lastDirectionChangeTime; // 방향 전환 시간을 추적하기 위한 변수
-    private const float MAX_NOD_DURATION = 0.5f; // 최대 허용 시간 (0.5초)
+    private float lastDirectionChangeTime;
+    private const float MAX_NOD_DURATION = 0.5f;
 
+    // Init current state
     void Start()
     {
         previousPitch = GetPitch();
         lastDirectionChangeTime = Time.time;
     }
 
+    // Track current state and descision move or not
     void Update()
     {
         float currentPitch = GetPitch();
@@ -23,12 +28,13 @@ public class PanelMover : MonoBehaviour
         if (!isIncreasing && pitchChange > nodThreshold)
         {
             isIncreasing = true;
-            lastDirectionChangeTime = Time.time; // 위로 움직이기 시작한 시간 기록
+            lastDirectionChangeTime = Time.time;
         }
         else if (isIncreasing && pitchChange < -nodThreshold)
         {
+            // Check rotation change occur
             float duration = Time.time - lastDirectionChangeTime;
-            if (duration <= MAX_NOD_DURATION) // 0.5초 이내에 완료된 경우에만
+            if (duration <= MAX_NOD_DURATION)
             {
                 MovePanelToCameraFront();
             }
@@ -39,19 +45,19 @@ public class PanelMover : MonoBehaviour
         previousPitch = currentPitch;
     }
 
+    // Panel position update
     void MovePanelToCameraFront()
     {
         if (canvas == null)
         {
-            Debug.LogWarning("Canvas가 할당되지 않았습니다.");
             return;
         }
 
         Vector3 newPosition = Camera.main.transform.position + Camera.main.transform.forward * 6.0f;
         canvas.transform.position = newPosition;
-        Debug.Log("Canvas가 앞으로 이동했습니다.");
     }
 
+    // Get pitch from main camera (x axis)
     float GetPitch()
     {
         return Camera.main.transform.eulerAngles.x;
