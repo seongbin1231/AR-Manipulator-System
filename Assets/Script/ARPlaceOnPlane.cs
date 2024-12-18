@@ -12,16 +12,16 @@ using UnityEngine.XR.ARSubsystems;
 public class ARPlaceOnPlane : MonoBehaviour
 {
     public ARRaycastManager arRaycaster;
-    public GameObject placeObject; // 배치할 오브젝트
-    private ImageTrackingHandler imageTrackingHandler; // ImageTrackingHandler 참조
+    public GameObject placeObject;
+    private ImageTrackingHandler imageTrackingHandler;
     private Pose savepose;
 
     [SerializeField]
-    private float moveSpeed = 0.005f; // 이동 속도
+    private float moveSpeed = 0.005f;
     [SerializeField]
-    private float rotateAngle = 0.5f; // 회전 각도
+    private float rotateAngle = 0.5f;
 
-    private Vector3 planeNormal = Vector3.up; // 평면의 법선 벡터 (기본: y축)
+    private Vector3 planeNormal = Vector3.up;
 
     // translation and orientation flag
     private bool isMovingUp = false;
@@ -30,8 +30,8 @@ public class ARPlaceOnPlane : MonoBehaviour
     private bool isMovingRight = false;
     private bool isRotatingCW = false;
     private bool isRotatingCCW = false;
-    private bool isMovingNormalUp = false; // 법선 방향 위쪽 이동
-    private bool isMovingNormalDown = false; // 법선 방향 아래쪽 이동
+    private bool isMovingNormalUp = false;
+    private bool isMovingNormalDown = false;
 
     void Start()
     {
@@ -50,12 +50,12 @@ public class ARPlaceOnPlane : MonoBehaviour
         // Init pose
         if (placeObject != null)
         {
-            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // 초기 위치를 멀리 설정
+            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity);
             Debug.Log($"Initial pose set: Position={savepose.position}, Rotation={savepose.rotation.eulerAngles}");
         }
         else
         {
-            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // placeObject가 없는 경우도 동일 설정
+            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity);
             Debug.LogWarning("placeObject not found. Initialized savepose with far-away default values.");
         }
     }
@@ -73,8 +73,8 @@ void Update()
     if (placeObject != null)
     {
         // Calculate local orientation
-        Vector3 forward = savepose.rotation * Vector3.forward; // 로봇의 전진 방향
-        Vector3 right = savepose.rotation * Vector3.right;     // 로봇의 오른쪽 방향
+        Vector3 forward = savepose.rotation * Vector3.forward;
+        Vector3 right = savepose.rotation * Vector3.right;
 
         // Move at local coordinate
         if (isMovingUp)
