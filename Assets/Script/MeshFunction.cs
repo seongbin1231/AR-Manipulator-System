@@ -45,18 +45,6 @@ public class MeshFunction : MonoBehaviour
     // Mesh info save
     private List<MeshData> savedMeshDataList = new List<MeshData>();
     public List<MeshData> SavedMeshDataList => savedMeshDataList;
-    // private bool isMeshSaved = false;
-
-    // // Variables that used in MeshMapRenderer
-    // private List<Vector3[]> savedVertices = new List<Vector3[]>();
-    // public List<Vector3[]> SavedVertices => savedVertices;
-    // private List<int[]> savedTriangles = new List<int[]>();
-    // public List<int[]> SavedTriangles => savedTriangles;
-    // private List<Vector3[]> savedNormals = new List<Vector3[]>();
-    // public List<Vector3[]> SavedNormals => savedNormals;
-    // private List<Vector2[]> savedUVs = new List<Vector2[]>();
-    // public List<Vector2[]> SavedUVs => savedUVs;
-    // // public bool IsMeshSaved => isMeshSaved;
 
     private void Start()
     {
@@ -159,45 +147,6 @@ public class MeshFunction : MonoBehaviour
         }
     }
 
-    // private void UpdateMeshColor(Vector3 meshPosition, MeshRenderer meshRenderer)
-    // {
-    //     if (isTransparentPrefab) // MeshPrefab_T가 선택된 경우
-    //     {
-    //         // 메시의 bounds를 사용하여 중심점 계산
-    //         Vector3 meshCenter = meshRenderer.bounds.center;
-
-    //         // 카메라로부터의 거리 계산
-    //         float distance = Vector3.Distance(Camera.main.transform.position, meshCenter);
-    //         Debug.Log($"Mesh ID: {meshRenderer.GetInstanceID()}, 카메라로부터의 거리: {distance}m");
-
-    //         // 거리 값을 0~10 범위로 제한
-    //         distance = Mathf.Clamp(distance, 0f, 10f);
-    //         Debug.Log($"Mesh ID: {meshRenderer.GetInstanceID()}, 제한된 거리: {distance}m");
-
-    //         Color color;
-    //         if (distance <= 5f)
-    //         {
-    //             // 0~5 범위: 빨간색(255,0,0)에서 노란색(255,255,0)으로
-    //             float t = distance / 5f;
-    //             color = new Color(1f, t, 0f, 0.3f);
-    //         }
-    //         else
-    //         {
-    //             // 5~10 범위: 노란색(255,255,0)에서 초록색(0,255,0)으로
-    //             float t = (distance - 5f) / 5f;
-    //             color = new Color(1f - t, 1f, 0f, 0.3f);
-    //         }
-
-    //         meshRenderer.sharedMaterial.color = color;
-    //     }
-    //     else // MeshPrefab_W��� 선택된 경우
-    //     {
-    //         // 색상을 고정
-    //         meshRenderer.sharedMaterial.color = new Color(1f, 1f, 1f, 0.784f); // (255, 255, 255, 200)
-    //     }
-    // }
-
-
     // Change Mesh Prefab (Transparent or Not)
     public void ChangeMesh()
     {
@@ -214,7 +163,7 @@ public class MeshFunction : MonoBehaviour
                 return;
             }
 
-            // Get Material in selected Prefab 
+            // Get Material in selected Prefab
             Material newMaterial = new Material(selectedPrefabRenderer.sharedMaterial);
 
             // Change current mesh object material

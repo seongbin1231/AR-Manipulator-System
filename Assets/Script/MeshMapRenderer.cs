@@ -47,7 +47,6 @@ public class MeshMapRenderer : MonoBehaviour
         {
             RenderSavedMeshData();
         }
-        // CheckCollisionSettings();
 
         // Add MeshMapCollisionDetector to all of the rendered mesh objects
         foreach (var obj in renderedMeshObjects)
@@ -207,93 +206,6 @@ public class MeshMapRenderer : MonoBehaviour
                             Gizmos.DrawLine(v3, v1);
                         }
                     }
-                }
-            }
-        }
-    }
-
-    // CheckCollisionSettings 메서드를 호출하여 확인
-    public void CheckCollisionSettings()
-    {
-        // Layer Collision Matrix 확인
-        int meshMapLayer = LayerMask.NameToLayer("MeshLayer");
-        int robotLayer = LayerMask.NameToLayer("RobotLink");
-        bool canCollide = !Physics.GetIgnoreLayerCollision(meshMapLayer, robotLayer);
-
-        // Collider 타입 및 설정 확인
-        Debug.Log($"\n=== Collider Settings ===");
-        foreach (var obj in renderedMeshObjects)
-        {
-            Debug.Log($"\nObject: {obj.name}");
-
-            // Collider 타입 확인
-            Collider[] colliders = obj.GetComponents<Collider>();
-            foreach (var collider in colliders)
-            {
-                string colliderType = "Unknown";
-                bool isConvex = false;
-
-                if (collider is MeshCollider meshCollider)
-                {
-                    colliderType = "Mesh Collider";
-                    isConvex = meshCollider.convex;
-                    Debug.Log($"- Collider Type: {colliderType}\n" +
-                             $"  - Is Convex: {isConvex}\n" +
-                             $"  - Is Trigger: {meshCollider.isTrigger}\n" +
-                             $"  - Has Mesh: {meshCollider.sharedMesh != null}");
-                }
-                else if (collider is BoxCollider)
-                {
-                    colliderType = "Box Collider (Primitive)";
-                }
-                else if (collider is SphereCollider)
-                {
-                    colliderType = "Sphere Collider (Primitive)";
-                }
-                else if (collider is CapsuleCollider)
-                {
-                    colliderType = "Capsule Collider (Primitive)";
-                }
-
-                // Rigidbody/ArticulationBody 확인
-                Rigidbody rb = obj.GetComponent<Rigidbody>();
-                ArticulationBody artBody = obj.GetComponent<ArticulationBody>();
-
-                string bodyType = "Static Collider";
-                if (rb != null)
-                {
-                    bodyType = rb.isKinematic ? "Kinematic Rigidbody" : "Dynamic Rigidbody";
-                }
-                else if (artBody != null)
-                {
-                    bodyType = "ArticulationBody";
-                }
-
-                if (colliderType != "Mesh Collider")
-                {
-                    Debug.Log($"- Collider Type: {colliderType}\n" +
-                             $"  - Is Trigger: {collider.isTrigger}");
-                }
-
-                Debug.Log($"  - Body Type: {bodyType}");
-
-                // ArticulationBody 상세 정보
-                if (artBody != null)
-                {
-                    Debug.Log($"  - ArticulationBody Details:\n" +
-                             $"    - Joint Type: {artBody.jointType}\n" +
-                             $"    - Immovable: {artBody.immovable}\n" +
-                             $"    - Use Gravity: {artBody.useGravity}\n" +
-                             $"    - Collision Detection: {artBody.collisionDetectionMode}");
-                }
-                // Rigidbody 상세 정보
-                else if (rb != null)
-                {
-                    Debug.Log($"  - Rigidbody Details:\n" +
-                             $"    - Mass: {rb.mass}\n" +
-                             $"    - Use Gravity: {rb.useGravity}\n" +
-                             $"    - Is Kinematic: {rb.isKinematic}\n" +
-                             $"    - Collision Detection: {rb.collisionDetectionMode}");
                 }
             }
         }
