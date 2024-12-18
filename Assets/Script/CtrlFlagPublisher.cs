@@ -2,24 +2,28 @@ using UnityEngine;
 using RosMessageTypes.Std;
 using Unity.Robotics.ROSTCPConnector;
 
+/// <summary>
+///     This script publishes a boolean robot control flag
+///     to a ROS topic when triggered by UI interaction.
+/// </summary>
 public class CtrlFlagPublisher : MonoBehaviour
 {
-    // ROS 토픽 이름 설정
+    // Set ROS topic name
     [SerializeField]
     private string m_TopicName = "/control_flag";
 
-    // ROS 연결을 위한 변수
+    // Variable for ROS connection
     private ROSConnection m_Ros;
 
     void Start()
     {
-        // ROS 연결 인스턴스 가져오기
+        // Get ROS connection instance
         m_Ros = ROSConnection.GetOrCreateInstance();
-        // Bool 메시지 타입의 퍼블리셔 등록
+        // Register publisher with Bool message type(to control real robot)
         m_Ros.RegisterPublisher<BoolMsg>(m_TopicName);
     }
 
-    // UI 버튼에서 호출할 함수
+    // Function to be called from UI button
     public void PublishControlFlag()
     {
         var flagMessage = new BoolMsg
@@ -27,7 +31,7 @@ public class CtrlFlagPublisher : MonoBehaviour
             data = true
         };
 
-        // ROS로 메시지 발행
+        // Publish message to ROS
         m_Ros.Publish(m_TopicName, flagMessage);
         Debug.Log("Control flag published: " + flagMessage.data);
     }

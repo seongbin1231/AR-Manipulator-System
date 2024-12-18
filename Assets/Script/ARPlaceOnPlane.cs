@@ -12,26 +12,26 @@ using UnityEngine.XR.ARSubsystems;
 public class ARPlaceOnPlane : MonoBehaviour
 {
     public ARRaycastManager arRaycaster;
-    public GameObject placeObject; // 배치할 오브젝트
-    private ImageTrackingHandler imageTrackingHandler; // ImageTrackingHandler 참조
+    public GameObject placeObject; // Object to be placed
+    private ImageTrackingHandler imageTrackingHandler; // Reference to ImageTrackingHandler
     private Pose savepose;
 
     [SerializeField]
-    private float moveSpeed = 0.005f; // 이동 속도
+    private float moveSpeed = 0.005f; // Movement speed
     [SerializeField]
-    private float rotateAngle = 0.5f; // 회전 각도
+    private float rotateAngle = 0.5f; // Rotation angle
 
-    private Vector3 planeNormal = Vector3.up; // 평면의 법선 벡터 (기본: y축)
+    private Vector3 planeNormal = Vector3.up; // Plane normal vector (default: y-axis)
 
-    // translation and orientation flag
+    // Translation and orientation flags
     private bool isMovingUp = false;
     private bool isMovingDown = false;
     private bool isMovingLeft = false;
     private bool isMovingRight = false;
     private bool isRotatingCW = false;
     private bool isRotatingCCW = false;
-    private bool isMovingNormalUp = false; // 법선 방향 위쪽 이동
-    private bool isMovingNormalDown = false; // 법선 방향 아래쪽 이동
+    private bool isMovingNormalUp = false; // Moving up along normal direction
+    private bool isMovingNormalDown = false; // Moving down along normal direction
 
     void Start()
     {
@@ -47,15 +47,15 @@ public class ARPlaceOnPlane : MonoBehaviour
             Debug.LogWarning("ImageTrackingHandler not found. Position and rotation updates will not work.");
         }
 
-        // Init pose
+        // Initialize pose
         if (placeObject != null)
         {
-            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // 초기 위치를 멀리 설정
+            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // Set initial position far away
             Debug.Log($"Initial pose set: Position={savepose.position}, Rotation={savepose.rotation.eulerAngles}");
         }
         else
         {
-            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // placeObject가 없는 경우도 동일 설정
+            savepose = new Pose(new Vector3(1000, 0, 1000), Quaternion.identity); // Same default for null placeObject
             Debug.LogWarning("placeObject not found. Initialized savepose with far-away default values.");
         }
     }
@@ -73,10 +73,10 @@ void Update()
     if (placeObject != null)
     {
         // Calculate local orientation
-        Vector3 forward = savepose.rotation * Vector3.forward; // 로봇의 전진 방향
-        Vector3 right = savepose.rotation * Vector3.right;     // 로봇의 오른쪽 방향
+        Vector3 forward = savepose.rotation * Vector3.forward; // Robot's forward direction
+        Vector3 right = savepose.rotation * Vector3.right;     // Robot's right direction
 
-        // Move at local coordinate
+        // Move in local coordinate system
         if (isMovingUp)
             savepose.position += forward * moveSpeed;
 
@@ -89,27 +89,27 @@ void Update()
         if (isMovingRight)
             savepose.position += right * moveSpeed;
 
-        // orientation
+        // Handle rotation
         if (isRotatingCW)
             savepose.rotation *= Quaternion.Euler(0, rotateAngle, 0);
 
         if (isRotatingCCW)
             savepose.rotation *= Quaternion.Euler(0, -rotateAngle, 0);
 
-        // normal vector
+        // Handle normal vector movement
         if (isMovingNormalUp)
             savepose.position += planeNormal * moveSpeed;
 
         if (isMovingNormalDown)
             savepose.position -= planeNormal * moveSpeed;
 
-        // Apply pose and save pose
+        // Apply and save the current pose
         ApplyPose();
         SaveObjectData();
     }
 }
 
-    // input event (translation)
+    // Input event handlers for translation
     public void OnMoveUpPress() => isMovingUp = true;
     public void OnMoveUpRelease() => isMovingUp = false;
 
@@ -122,21 +122,21 @@ void Update()
     public void OnMoveRightPress() => isMovingRight = true;
     public void OnMoveRightRelease() => isMovingRight = false;
 
-    // input event (rotation)
+    // Input event handlers for rotation
     public void OnRotateCWPress() => isRotatingCW = true;
     public void OnRotateCWRelease() => isRotatingCW = false;
 
     public void OnRotateCCWPress() => isRotatingCCW = true;
     public void OnRotateCCWRelease() => isRotatingCCW = false;
 
-    // input event (normal)
+    // Input event handlers for normal vector movement
     public void OnMoveNormalUpPress() => isMovingNormalUp = true;
     public void OnMoveNormalUpRelease() => isMovingNormalUp = false;
 
     public void OnMoveNormalDownPress() => isMovingNormalDown = true;
     public void OnMoveNormalDownRelease() => isMovingNormalDown = false;
 
-    // Apply pose
+    // Apply current pose to the object
     private void ApplyPose()
     {
         if (placeObject != null)
@@ -148,7 +148,7 @@ void Update()
         }
     }
 
-    // Pose update from imageTrackingHandler
+    // Update pose from image tracking
     private void UpdatePoseFromImage(Vector3 position, Quaternion rotation)
     {
         savepose.position = position;
@@ -157,24 +157,24 @@ void Update()
         Debug.Log($"Updated Pose: Position={position}, Rotation={rotation}");
     }
 
-    // set normal vector for plane
+    // Set the normal vector for the plane
     public void SetPlaneNormal(Vector3 normal)
     {
         planeNormal = normal.normalized;
         Debug.Log($"Plane normal set to: {planeNormal}");
     }
 
-    // save object data
+    // Save object position and rotation data
     public void SaveObjectData()
     {
         if (placeObject != null)
         {
             ObjectDataManager.SetObjectData(savepose.position, savepose.rotation);
-            Debug.Log("Object 위치와 회전값이 저장되었습니다.");
+            Debug.Log("Object position and rotation have been saved.");
         }
         else
         {
-            Debug.LogWarning("저장할 Object가 없습니다.");
+            Debug.LogWarning("No object to save data for.");
         }
     }
 }

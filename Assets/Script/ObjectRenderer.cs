@@ -1,9 +1,15 @@
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+///     This script handles object instantiation and positioning
+///     based on previously saved position and rotation data.
+///     It manages the object's transform using ArticulationBody
+///     for precise placement in the scene.
+/// </summary>
 public class ObjectRenderer : MonoBehaviour
 {
-    public GameObject objectPrefab; // Inspector에서 할당할 프리팹
+    public GameObject objectPrefab; // Prefab to be assigned in Inspector
 
     private Vector3 savedPosition;
     private Quaternion savedRotation;
@@ -12,27 +18,17 @@ public class ObjectRenderer : MonoBehaviour
     {
         if (ObjectDataManager.IsObjectSaved())
         {
-            // 저장된 데이터로 오브젝트 생성
+            // Create object with saved data
             savedPosition = ObjectDataManager.GetSavedPosition();
             savedRotation = ObjectDataManager.GetSavedRotation();
 
             ArticulationBody BaseLinkArticulationBody = objectPrefab.GetComponent<ArticulationBody>();
             BaseLinkArticulationBody.TeleportRoot(savedPosition, savedRotation);
-            Debug.Log($"Object가 생성되었습니다 - Position: {savedPosition}, Rotation: {savedRotation}");
-
-            // 코루틴 시작
-            // StartCoroutine(UpdateObjectTransform());
+            Debug.Log($"Object has been created - Position: {savedPosition}, Rotation: {savedRotation}");
         }
-
         else
         {
-            Debug.LogWarning("저장된 Object 데이터가 없습니다.");
+            Debug.LogWarning("No saved object data found.");
         }
-    }
-
-    void Update()
-    {
-        // ArticulationBody BaseLinkArticulationBody = objectPrefab.GetComponent<ArticulationBody>();
-        // BaseLinkArticulationBody.TeleportRoot(savedPosition, savedRotation);
     }
 }

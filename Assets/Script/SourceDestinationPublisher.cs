@@ -6,17 +6,25 @@ using Unity.Robotics.UrdfImporter;
 using UnityEngine;
 using RosMessageTypes.Std;
 
+/// <summary>
+///     This script reads the robot joint positions and
+///     publishes them to ROS topic as Float32MultiArray message.
+///     It monitors joint states and publishes when collision is detected.
+/// </summary>
 public class SourceDestinationPublisher : MonoBehaviour
 {
+    // Constants for the number of robot joints
     const int k_NumRobotJoints = 6;
 
+    // Array of link names for the robot joints
     public static readonly string[] LinkNames =
         { "base_link/link1", "/link2", "/link3", "/link4", "/link5", "/link6" };
 
-    // Variables required for ROS communication
+    // ROS topic name for publishing joint states
     [SerializeField]
     string m_TopicName = "/robot_joints";
 
+    // Reference to the robot GameObject
     [SerializeField]
     GameObject m_Robot;
     [SerializeField]
@@ -25,20 +33,22 @@ public class SourceDestinationPublisher : MonoBehaviour
     // GameObject m_TargetPlacement;
     // readonly Quaternion m_PickOrientation = Quaternion.Euler(90, 90, 0);
 
-    // Robot Joints
+    // Array to store joint components
     UrdfJointRevolute[] m_JointArticulationBodies;
 
-    // ROS Connector
+    // ROS connection instance
     ROSConnection m_Ros;
 
     void Start()
     {
-        // Get ROS connection static instance
+        // Initialize ROS connection and register publisher
         m_Ros = ROSConnection.GetOrCreateInstance();
         m_Ros.RegisterPublisher<Float32MultiArrayMsg>(m_TopicName);
 
+        // Initialize joint array
         m_JointArticulationBodies = new UrdfJointRevolute[k_NumRobotJoints];
 
+        // Find and store all joint components
         var linkName = string.Empty;
         for (var i = 0; i < k_NumRobotJoints; i++)
         {
@@ -51,6 +61,7 @@ public class SourceDestinationPublisher : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Publish message when collision is detected
         if (MeshMapCollisionDetector.isCollision)
         {
             Publish();
@@ -59,9 +70,11 @@ public class SourceDestinationPublisher : MonoBehaviour
 
     public void Publish()
     {
+        // Create new message for joint states
         var sourceDestinationMessage = new Float32MultiArrayMsg();
         sourceDestinationMessage.data = new float[k_NumRobotJoints];
 
+        // Get position of each joint and store in message
         for (var i = 0; i < k_NumRobotJoints; i++)
         {
             if (m_JointArticulationBodies[i] == null)
@@ -69,26 +82,12 @@ public class SourceDestinationPublisher : MonoBehaviour
                 Debug.LogError($"m_JointArticulationBodies[{i}] is null");
                 continue;
             }
-            // GetPosition()을 호출하기 전에 Joint의 이름과 위치를 출력
-                string jointName = m_JointArticulationBodies[i].name;
-                float position = m_JointArticulationBodies[i].GetPosition();
-                Debug.Log($"Joint {i}: Name = {jointName}, Position = {position}");
-            sourceDestinationMessage.data[i] = m_JointArticulationBodies[i].GetPosition();
+            // Log joint name and position for debugging
+            string jointName = m_JointArticulationBodies[i].name;
+            float position = m_JointArticulationBodies[i].GetPosition();
+            Debug.Log($"Joint {i}: Name = {jointName}, Position = {position}");
+            sourceDestinationMessage.data[i] = position;
         }
-
-        // // Pick Pose
-        // sourceDestinationMessage.pick_pose = new PoseMsg
-        // {
-        //     position = m_Target.transform.position.To<FLU>(),
-        //     orientation = Quaternion.Euler(90, m_Target.transform.eulerAngles.y, 0).To<FLU>()
-        // };
-
-        // // Place Pose
-        // sourceDestinationMessage.place_pose = new PoseMsg
-        // {
-        //     position = m_TargetPlacement.transform.position.To<FLU>(),
-        //     orientation = m_PickOrientation.To<FLU>()
-        // };
 
         // Finally send the message to server_endpoint.py running in ROS
         m_Ros.Publish(m_TopicName, sourceDestinationMessage);
