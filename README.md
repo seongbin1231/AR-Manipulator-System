@@ -6,6 +6,8 @@
 
 ## 씬(Scene) 구성
 
+![System Scenario](/Screenshot.png)
+
 ### 1. MeshMapping Scene
 
 - AR 기반 실시간 3D 맵 생성
